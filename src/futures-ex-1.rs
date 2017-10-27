@@ -1,24 +1,30 @@
 extern crate futures;
 extern crate futures_cpupool;
+extern crate tokio_timer;
+
+use std::time::Duration;
 
 use futures::Future;
 use futures_cpupool::CpuPool;
+use tokio_timer::Timer;
 
 fn main() {
     let pool = CpuPool::new_num_cpus();
+    let timer = Timer::default();
 
-    let prime_future = pool.spawn_fn(|| {
-        let prime = is_prime(BIG_PRIME);
-        let res: Result<bool, ()> = Ok(prime);
-        res
+    let timeout = timer.sleep(Duration::from_millis(750))
+        .then(|_| Err(()));
+
+    let prime = pool.spawn_fn(|| {
+        Ok(is_prime(BIG_PRIME))
     });
 
-    println!("Create a Future!");
+    let winner =  timeout.select(prime).map(|(win, _)| win);
 
-    if prime_future.wait().unwrap() {
-        println!("Prime!");
-    } else {
-        println!("Not Prime!");
+    match winner.wait() {
+        Ok(true) => println!("Prime!"),
+        Ok(false) => println!("Not Prime!"),
+        Err(_) => println!("Time out."),
     }
 }
 
