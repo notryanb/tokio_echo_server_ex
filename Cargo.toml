@@ -11,6 +11,10 @@ path = "src/echo-server.rs"
 name = "futures"
 path = "src/futures-ex-1.rs"
 
+[[bin]]
+name = "db"
+path = "src/proto-db.rs"
+
 [dependencies]
 bytes = "0.4"
 futures = "0.1"
